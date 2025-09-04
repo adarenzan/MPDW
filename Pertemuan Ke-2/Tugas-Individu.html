@@ -352,10 +352,10 @@ display: none;
 </div>
 
 
-<hr />
 <div id="ipm-kota-pariaman" class="section level1">
 <h1>IPM Kota Pariaman</h1>
-<p>Mhd Haekal Hakim G1401231012</p>
+<p>Mhd Haekal Hakim</p>
+<p>G1401231012</p>
 </div>
 <div id="library" class="section level1">
 <h1>Library</h1>
@@ -363,7 +363,7 @@ display: none;
 <h2>Library Untuk Menginstal Orcutt</h2>
 <pre class="r"><code>#install.packages(&quot;https://cran.r-project.org/src/contrib/Archive/orcutt/orcutt_2.1.tar.gz&quot;, repos = NULL, type = &quot;source&quot;) #Download Orcuttnya dulu di sini
 
-#install.packages(&quot;C:/Users/mhdha/Downloads/orcutt_2.1.tar.gz&quot;, repos = NULL, type = &quot;source&quot;) #Habis di download, copy pathnya trus di install menggunakan path ini
+#install.packages(&quot;C:/Users/mhdha/Downloads/orcutt_2.1.tar.gz&quot;, repos = NULL, type = &quot;source&quot;) #Habis didownload, copy pathnya trus di install menggunakan path ini
 
 #install.packages(&quot;orcutt&quot;)</code></pre>
 <pre class="r"><code>library(readxl)</code></pre>
@@ -491,17 +491,17 @@ summary(model)</code></pre>
 ## DW = 1.2185, p-value = 0.0265
 ## alternative hypothesis: true autocorrelation is greater than 0</code></pre>
 <p>Berdasarkan hasil uji tes Durbin-Watson, diperoleh nilai <span class="math inline">\(p-value\)</span> sebesar 0.0265 yang di mana lebih
-kecil dari 0.05. Yang menandakan adanya korelasi pada data IPM Kota
+kecil dari 0.05. Yang menandakan adanya autokorelasi pada data IPM Kota
 Pariaman. Sehingga perlu ditangani.</p>
 </div>
 <div id="penanganan-autokorelasi" class="section level2">
 <h2>Penanganan Autokorelasi</h2>
 <div id="metode-cochrane-orcutt" class="section level3">
 <h3>Metode Cochrane-Orcutt</h3>
-<p>Penanganan metode Cochrane-Orcutt dapat dilakukan dengan bantuan
-packages Orcutt pada aplikasi <code>R</code> maupun secara manual.
-Berikut ini ditampilkan cara menggunakan bantuan <code>library</code>
-<em>packages</em> <code>Orcutt</code>.</p>
+<p>Penanganan autokorelasi menggunakan metode Cochrane-Orcutt dapat
+dilakukan dengan bantuan packages Orcutt pada aplikasi <code>R</code>
+maupun secara manual. Berikut ini ditampilkan cara menggunakan bantuan
+<code>library</code> <em>packages</em> <code>Orcutt</code>.</p>
 <pre class="r"><code>#Penanganan Autokorelasi Cochrane-Orcutt
 modelCO&lt;-cochrane.orcutt(model)
 modelCO</code></pre>

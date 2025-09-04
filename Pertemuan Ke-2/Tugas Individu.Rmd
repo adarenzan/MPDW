@@ -1,10 +1,8 @@
----
----
----
-
 # IPM Kota Pariaman
 
-Mhd Haekal Hakim G1401231012
+Mhd Haekal Hakim
+
+G1401231012
 
 # Library
 
@@ -13,7 +11,7 @@ Mhd Haekal Hakim G1401231012
 ```{r}
 #install.packages("https://cran.r-project.org/src/contrib/Archive/orcutt/orcutt_2.1.tar.gz", repos = NULL, type = "source") #Download Orcuttnya dulu di sini
 
-#install.packages("C:/Users/mhdha/Downloads/orcutt_2.1.tar.gz", repos = NULL, type = "source") #Habis di download, copy pathnya trus di install menggunakan path ini
+#install.packages("C:/Users/mhdha/Downloads/orcutt_2.1.tar.gz", repos = NULL, type = "source") #Habis didownload, copy pathnya trus di install menggunakan path ini
 
 #install.packages("orcutt")
 ```
@@ -79,13 +77,13 @@ summary(model)
 dwtest(model)
 ```
 
-Berdasarkan hasil uji tes Durbin-Watson, diperoleh nilai $p-value$ sebesar 0.0265 yang di mana lebih kecil dari 0.05. Yang menandakan adanya korelasi pada data IPM Kota Pariaman. Sehingga perlu ditangani.
+Berdasarkan hasil uji tes Durbin-Watson, diperoleh nilai $p-value$ sebesar 0.0265 yang di mana lebih kecil dari 0.05. Yang menandakan adanya autokorelasi pada data IPM Kota Pariaman. Sehingga perlu ditangani.
 
 ## Penanganan Autokorelasi
 
 ### Metode Cochrane-Orcutt
 
-Penanganan metode Cochrane-Orcutt dapat dilakukan dengan bantuan packages Orcutt pada aplikasi `R` maupun secara manual. Berikut ini ditampilkan cara menggunakan bantuan `library` *packages* `Orcutt`.
+Penanganan autokorelasi menggunakan metode Cochrane-Orcutt dapat dilakukan dengan bantuan packages Orcutt pada aplikasi `R` maupun secara manual. Berikut ini ditampilkan cara menggunakan bantuan `library` *packages* `Orcutt`.
 
 ```{r}
 #Penanganan Autokorelasi Cochrane-Orcutt
