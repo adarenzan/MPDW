@@ -44,7 +44,7 @@ dt_rg |> as_tsibble() |>
 
 Berdasarkan plot time series tersebut, terlihat bahwa data tidak stasioner dalam rataan, ditandai dengan adanya trend pada data dan tidak stasioner dalam ragam, ditandai dengan adanya perbedaan lebar pita pada plot
 
-### Uji ACF
+#### Uji ACF
 
 ```{r}
 acf(dt_rg)
@@ -52,7 +52,7 @@ acf(dt_rg)
 
 Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut menurun secara perlahan (*tails off slowly*) yang menandakan data tidak stasioner dalam rataan
 
-### Uji ADF
+#### Uji ADF
 
 ```{r}
 adf.test(dt_rg)
@@ -116,7 +116,7 @@ dt_rg_diff1 |> as_tsibble() |>
 
 ```
 
-### Cek ACF dan ADF
+#### Cek ACF dan ADF
 
 ```{r}
 acf(dt_rg_diff1)
