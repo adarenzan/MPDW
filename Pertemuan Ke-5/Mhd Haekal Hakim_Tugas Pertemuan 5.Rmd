@@ -97,15 +97,10 @@ cat("95% CI Lambda:", min(ci_lambda), "-", max(ci_lambda), "\n")
 
 ```
 
-```{r}
-# Transformasi sesuai Lambda_opt
-  dt_rg_trans <- dt_rg_shift^lambda_opt
-```
-
 ### Differencing
 
 ```{r}
-dt_rg_diff1 <- diff(dt_rg_trans, differences = 1)
+dt_rg_diff1 <- diff(dt_rg, differences = 1)
 ```
 
 ```{r}
