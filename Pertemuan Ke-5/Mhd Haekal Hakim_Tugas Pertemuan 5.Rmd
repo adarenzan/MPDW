@@ -1,0 +1,135 @@
+---
+title: "Mhd Haekal Hakim_Tugas Pertemuan 5"
+author: "Mhd Haekal Hakim"
+date: "2025-10-02"
+output: html_document
+---
+
+## Library
+
+```{r warning=FALSE}
+library(tseries)
+library(ggplot2)
+library(tsibble)
+library(MASS)
+library(readxl)
+```
+
+## Data
+
+```{r warning=FALSE}
+## Baca Data
+data <- read_excel("C:/Users/mhdha/OneDrive/Dokumen/IPB/Semester 5/MPDW/JKSE_Close_Weekly.xlsx")
+
+data1 <- data[518:775, ]
+data1
+```
+
+### Mengambil Data Train
+
+```{r}
+n <- nrow(data1)              # jumlah data = 258
+n_train <- floor(0.8 * n)  # train = 206
+dt_rg <- data1$`Close`[1:n_train] |> ts()
+```
+
+### Membuat Plot Data Time Series
+
+```{r}
+dt_rg |> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() + theme_bw() +
+  xlab("Obs") + ylab("Nilai")
+```
+
+Berdasarkan plot time series tersebut, terlihat bahwa data tidak stasioner dalam rataan, ditandai dengan adanya trend pada data dan tidak stasioner dalam ragam, ditandai dengan adanya perbedaan lebar pita pada plot
+
+### Uji ACF
+
+```{r}
+acf(dt_rg)
+```
+
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut menurun secara perlahan (*tails off slowly*) yang menandakan data tidak stasioner dalam rataan
+
+### Uji ADF
+
+```{r}
+adf.test(dt_rg)
+```
+
+$H_0$: Data tidak stasioner dalam rataan
+
+$H_1$: Data stasioner dalam rataan
+
+Berdasarkan uji ADF tersebut, didapat p-value sebesar 0.5002 yang lebih besar dari taraf nyata 5% dan menandakan bahwa data tidak stasioner dalam rataan. Hal ini sesuai dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
+
+### Uji Box-cox
+
+```{r}
+# Bikin Index
+index <- seq_along(dt_rg)
+```
+
+```{r}
+# Buat Data Supaya Positif
+shift_val <- abs(min(dt_rg)) + 1
+dt_rg_shift <- dt_rg + shift_val
+```
+
+```{r}
+# Regresi Linear untuk Box-Cox
+lm_bc <- lm(dt_rg_shift ~ index)
+```
+
+```{r}
+# Uji Box-Cox
+bc <- boxcox(lm_bc, lambda = seq(0, 5, by = 0.001))
+```
+
+```{r}
+# Cari Lambda Optimum
+lambda_opt <- bc$x[which.max(bc$y)]
+ci_lambda <- bc$x[bc$y > max(bc$y) - 0.5 * qchisq(0.95, 1)]
+
+cat("Lambda Optimum:", lambda_opt, "\n")
+cat("95% CI Lambda:", min(ci_lambda), "-", max(ci_lambda), "\n")
+
+```
+
+```{r}
+# Transformasi sesuai Lambda_opt
+  dt_rg_trans <- dt_rg_shift^lambda_opt
+```
+
+### Differencing
+
+```{r}
+dt_rg_diff1 <- diff(dt_rg_trans, differences = 1)
+```
+
+```{r}
+dt_rg_diff1 |> as_tsibble() |>
+  ggplot(aes(x = index, y = value)) + 
+  geom_line() + theme_bw() +
+  xlab("Obs") + ylab("Differenced value")
+
+```
+
+### Cek ACF dan ADF
+
+```{r}
+acf(dt_rg_diff1)
+```
+
+Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut berada dalam rentang yang menandakan bahwa data stasioner dalam rataan
+
+```{r warning=FALSE}
+adf.test(dt_rg_diff1)
+```
+
+$H_0$: Data tidak stasioner dalam rataan
+
+$H_1$: Data stasioner dalam rataan
+
+Berdasarkan uji ADF tersebut, didapat p-value sebesar 0.01 yang lebih kecil dari taraf nyata 5% dan menandakan bahwa data stasioner dalam rataan. Hal ini sesuai dengan hasil eksplorasi menggunakan plot time series dan plot ACF.
