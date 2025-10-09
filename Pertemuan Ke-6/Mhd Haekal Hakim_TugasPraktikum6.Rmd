@@ -101,55 +101,58 @@ cat("Lambda Optimum:", lambda_opt, "\n")
 cat("95% CI Lambda:", min(ci_lambda), "-", max(ci_lambda), "\n")
 
 ```
+### Transformasi
+```{r}
+# --- Transformasi Box-Cox ---
+# Pastikan semua nilai positif
+shift_val <- abs(min(dt_rg)) + 1
+dt_shift <- dt_rg + shift_val
+
+# Regresi linear untuk uji Box-Cox
+lm_bc <- lm(dt_shift ~ seq_along(dt_shift))
+
+# Uji Box-Cox dengan rentang lambda yang cukup luas
+bc <- boxcox(lm_bc, lambda = seq(-1, 2, 0.001))
+
+# Ambil lambda optimum
+lambda_opt <- bc$x[which.max(bc$y)]
+cat("Lambda optimum Box-Cox:", lambda_opt, "\n")
+
+# Transformasi Box-Cox
+dt_bc <- BoxCox(dt_shift, lambda = lambda_opt)
+
+# Plot hasil transformasi
+dt_bc |> as_tsibble() |> 
+  ggplot(aes(x = index, y = value)) +
+  geom_line() + theme_bw() +
+  xlab("Obs") + ylab("Box-Cox transformed")
+```
 
 ### Differencing
 
 ```{r}
-dt_rg_diff1 <- diff(dt_rg, differences = 1)
-```
+# Differencing setelah transformasi
+dt_diff <- diff(dt_bc, differences = 1)
 
-```{r}
-dt_rg_diff1 |> as_tsibble() |>
+# Plot
+dt_diff |> as_tsibble() |> 
   ggplot(aes(x = index, y = value)) + 
   geom_line() + theme_bw() +
-  xlab("Obs") + ylab("Differenced value")
+  xlab("Obs") + ylab("Differenced (BoxCox)")
+
 
 ```
-
-```{r}
-# Bikin index baru
-index_diff <- seq_along(dt_rg_diff1)
-
-# Supaya semua nilai positif (karena Box-Cox nggak bisa jalan kalau ada nilai <= 0)
-shift_val_diff <- abs(min(dt_rg_diff1)) + 1
-dt_diff_shift <- dt_rg_diff1 + shift_val_diff
-
-# Regresi linear untuk uji Box-Cox
-lm_bc_diff <- lm(dt_diff_shift ~ index_diff)
-
-# Uji Box-Cox
-bc_diff <- boxcox(lm_bc_diff, lambda = seq(0, 5, by = 0.001))
-
-# Cari lambda optimum
-lambda_opt_diff <- bc_diff$x[which.max(bc_diff$y)]
-ci_lambda_diff <- bc_diff$x[bc_diff$y > max(bc_diff$y) - 0.5 * qchisq(0.95, 1)]
-
-cat("Lambda Optimum setelah differencing:", lambda_opt_diff, "\n")
-cat("95% CI Lambda:", min(ci_lambda_diff), "-", max(ci_lambda_diff), "\n")
-
-```
-
 
 #### Cek ACF dan ADF
 
 ```{r}
-acf(dt_rg_diff1)
+acf(dt_diff)
 ```
 
 Berdasarkan plot ACF, terlihat bahwa plot ACF pada data tersebut berada dalam rentang yang menandakan bahwa data stasioner dalam rataan
 
 ```{r warning=FALSE}
-adf.test(dt_rg_diff1)
+adf.test(dt_diff)
 ```
 
 $H_0$: Data tidak stasioner dalam rataan
@@ -164,11 +167,11 @@ par(mfrow = c(1,2))
 ```
 
 ```{r}
-acf(dt_rg_diff1, main ="ACF", lag.max=20)
+acf(dt_diff, main ="ACF", lag.max=20)
 ```
 
 ```{r}
-pacf(dt_rg_diff1, main="PACF", lag.max=20)
+pacf(dt_diff, main="PACF", lag.max=20)
 ```
 
 ```{r}
@@ -178,13 +181,13 @@ par(mfrow = c(1,1))
 Berdasarkan Plot ACF, terlihat cuts off pada lag ke-1 sehingga dapat kita asumsikan model yang terbentuk adalah ARIMA(0,0,1). Selanjutnya, berdasarkan plot PACF, tidak terlihat cuts off pada lag pertama sehingga model yang terbentuk adalah ARIMA(0,0,0). Selain dengan plot ACF dan PACF, penentuan spesifikasi model dilakukan dengan extended ACF (EACF) berikut ini.
 
 ```{r}
-eacf(dt_rg_diff1)
+eacf(dt_diff)
 ```
-Menggunakan plot EACF, dapat diambil beberapa model dengan melihat ujung segitiga yang terbentuk, antara lain ARIMA(0,0,0), ARIMA(1,0,1), ARIMA(2,0,2), ARIMA(3,0,3), ARIMA(4,0,4), dan ARIMA(5,0,4).
+Menggunakan plot EACF, dapat diambil beberapa model dengan melihat ujung segitiga yang terbentuk, antara lain ARIMA(0,0,0), ARIMA(1,0,1), ARIMA(2,0,2), ARIMA(3,0,3), ARIMA(4,0,4), dan ARIMA(6,0,6).
 
 ## Pendugaan Parameter
 ```{r}
-model1=Arima(dt_rg_diff1, order=c(0,0,0),method="ML")
+model1=Arima(dt_diff, order=c(0,0,0),method="ML")
 summary(model1)
 ```
 
@@ -193,7 +196,7 @@ lmtest::coeftest(model1)
 ```
 
 ```{r}
-model2=Arima(dt_rg_diff1, order=c(0,0,1),method="ML")
+model2=Arima(dt_diff, order=c(0,0,1),method="ML")
 summary(model2)
 ```
 
@@ -202,7 +205,7 @@ lmtest::coeftest(model2)
 ```
 
 ```{r}
-model3=Arima(dt_rg_diff1, order=c(1,0,1),method="ML")
+model3=Arima(dt_diff, order=c(1,0,1),method="ML")
 summary(model3)
 ```
 
@@ -211,7 +214,7 @@ lmtest::coeftest(model3) #seluruh parameter signifikan
 ```
 
 ```{r}
-model4=Arima(dt_rg_diff1, order=c(3,0,3),method="ML")
+model4=Arima(dt_diff, order=c(3,0,3),method="ML")
 summary(model4)
 ```
 
@@ -219,7 +222,7 @@ summary(model4)
 lmtest::coeftest(model4)
 ```
 ```{r}
-model5=Arima(dt_rg_diff1, order=c(4,0,4),method="ML")
+model5=Arima(dt_diff, order=c(4,0,4),method="ML")
 summary(model5)
 ```
 
@@ -228,7 +231,7 @@ lmtest::coeftest(model5)
 ```
 
 ```{r}
-model6=Arima(dt_rg_diff1, order=c(5,0,4),method="ML")
+model6=Arima(dt_diff, order=c(6,0,6),method="ML")
 summary(model6)
 ```
 
@@ -236,7 +239,7 @@ summary(model6)
 lmtest::coeftest(model6)
 ```
 ```{r}
-model7=Arima(dt_rg_diff1, order=c(2,0,2),method="ML")
+model7=Arima(dt_diff, order=c(2,0,2),method="ML")
 summary(model7)
 ```
 
@@ -251,7 +254,7 @@ hasil_model <- data.frame(
             "ARIMA(1,0,1)",
             "ARIMA(3,0,3)",
             "ARIMA(4,0,4)",
-            "ARIMA(5,0,4)",
+            "ARIMA(6,0,6)",
             "ARIMA(2,0,2)"),
   AIC = c(
     AIC(model1),
@@ -357,7 +360,7 @@ Hanya normalitas sisaan yang gagal, model ARIMA masih boleh dipakai untuk foreca
 
 ## Overfitting
 ```{r}
-model2=Arima(dt_rg_diff1, order=c(0,0,1),method="ML")
+model2=Arima(dt_diff, order=c(0,0,1),method="ML")
 summary(model2)
 ```
 
@@ -367,7 +370,7 @@ lmtest::coeftest(model2)
 
 ## Model Terbaik
 ```{r}
-model2=Arima(dt_rg_diff1, order=c(0,0,1),method="ML")
+model2=Arima(dt_diff, order=c(0,0,1),method="ML")
 summary(model2)
 ```
 
@@ -400,31 +403,37 @@ ramalan <- forecast::forecast(model2, h = length(test.ts))
 data.ramalan <- as.numeric(ramalan$mean)
 plot(ramalan)
 
-# Inverse differencing
-# xi harus berupa nilai (numeric) terakhir dari data ORIGINAL sebelum differencing
-xi_value <- as.numeric(tail(train.ts, 1))   # length = 1 karena differences = 1
+# --- Inverse differencing ---
+# xi_value adalah nilai terakhir dari data sebelum differencing (yaitu dt_bc)
+xi_value <- as.numeric(tail(dt_bc, 1))  # bukan train.ts
 
-# gunakan nama variabel yang tidak menimpa fungsi "forecast"
 forecast_inv <- diffinv(data.ramalan, differences = 1, xi = xi_value)
 
-# diffinv mengembalikan panjang = length(data.ramalan) + 1, sehingga buang elemen pertama
-hasil <- as.numeric(forecast_inv[-1])
+# diffinv hasilnya punya panjang +1, jadi buang elemen pertama
+hasil_diffinv <- as.numeric(forecast_inv[-1])
 
-# pastikan panjang sama dengan test set
-hasil <- hasil[seq_len(length(test.ts))]
+# Pastikan panjang sesuai dengan test set
+hasil_diffinv <- hasil_diffinv[seq_len(length(test.ts))]
 
-# Bandingkan aktual vs forecast
-perbandingan <- cbind(
+# --- Inverse Box-Cox ---
+hasil_invbc <- InvBoxCox(hasil_diffinv, lambda = lambda_opt)
+
+# --- Kembalikan ke skala asli ---
+hasil_final <- hasil_invbc - shift_val
+
+# 🔹 Bandingkan aktual vs hasil ramalan
+perbandingan <- data.frame(
   Aktual   = as.numeric(test.ts),
-  Forecast = hasil
+  Forecast = hasil_final
 )
 
 print(head(perbandingan, 10))
 
-# Contoh metrik akurasi sederhana
-library(Metrics)  # opsi: atau hitung manual RMSE / MAPE
-rmse_val <- sqrt(mean((perbandingan[, "Aktual"] - perbandingan[, "Forecast"])^2, na.rm=TRUE))
-mape_val <- mean(abs((perbandingan[, "Aktual"] - perbandingan[, "Forecast"]) / perbandingan[, "Aktual"]), na.rm=TRUE) * 100
+# 🔹 Hitung akurasi
+library(Metrics)
+rmse_val <- sqrt(mean((perbandingan$Aktual - perbandingan$Forecast)^2, na.rm = TRUE))
+mape_val <- mean(abs((perbandingan$Aktual - perbandingan$Forecast) / perbandingan$Aktual), na.rm = TRUE) * 100
+
 cat("RMSE:", rmse_val, "  MAPE (%):", mape_val, "\n")
 ```
 
